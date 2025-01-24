@@ -39,4 +39,8 @@ const registryCredentials = containerregistry
       password: creds.passwords![0].value!,
     }
   })
+
+  export const acrServer = registry.loginServer
+  export const acrUsername = registryCredentials.username
+
   
