@@ -111,6 +111,13 @@ const containerGroup = new containerinstance.ContainerGroup(
     },
   )
 
+  // Export the service's IP address, hostname, and fully-qualified URL.
+export const hostname = containerGroup.ipAddress.apply((addr) => addr!.fqdn!)
+export const ip = containerGroup.ipAddress.apply((addr) => addr!.ip!)
+export const url = containerGroup.ipAddress.apply(
+  (addr) => `http://${addr!.fqdn!}:${containerPort}`,
+)
+
   
 
   
