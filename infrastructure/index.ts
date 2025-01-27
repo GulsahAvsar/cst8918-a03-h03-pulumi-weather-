@@ -3,6 +3,7 @@ import * as resources from '@pulumi/azure-native/resources'
 import * as containerregistry from '@pulumi/azure-native/containerregistry'
 import * as docker from '@pulumi/docker'
 import * as containerinstance from '@pulumi/azure-native/containerinstance'
+import * as dockerBuild from "@pulumi/docker-build";
 
 // Import the configuration settings for the current stack.
 const config = new pulumi.Config()
@@ -43,18 +44,37 @@ const registryCredentials = containerregistry
   })
 
   // Define the container image for the service.
-const image = new docker.Image(`${prefixName}-image`, {
-    imageName: pulumi.interpolate`${registry.loginServer}/${imageName}:${imageTag}`,
-    build: {
-      context: appPath,
-      platform: 'linux/amd64',
+const image = new dockerBuild.Image(`${prefixName}-image`, {
+  tags: [pulumi.interpolate`${registry.loginServer}/${imageName}:${imageTag}`],
+  context: { location: appPath }, // Path to your application
+  dockerfile: { location: `${appPath}/Dockerfile` }, // Path to Dockerfile
+  platforms: ['linux/amd64', 'linux/arm64'], // Specify supported platforms
+  push: true, // Enable pushing to the container registry
+  registries: [
+    {
+      address: registry.loginServer, // Registry login server (e.g., Azure Container Registry URL)
+      username: registryCredentials.username, // Username for the registry
+      password: registryCredentials.password, // Password for the registry
     },
-    registry: {
-      server: registry.loginServer,
-      username: registryCredentials.username,
-      password: registryCredentials.password,
+  ],
+});
+
+// Update the container definition to use the image reference.
+const containerDefinition = new azure.containerservice.Group("my-container-group", {
+  containers: [
+    {
+      name: "my-app",
+      image: image.ref, // Use the new image reference
+      resources: {
+        requests: {
+          cpu: "0.5",
+          memory: "1.5Gi",
+        },
+      },
     },
-  })
+  ],
+  osType: "Linux",
+});
 
   // Create a container group in the Azure Container App service and make it publicly accessible.
 const containerGroup = new containerinstance.ContainerGroup(
