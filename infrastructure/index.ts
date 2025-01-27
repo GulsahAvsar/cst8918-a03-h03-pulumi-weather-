@@ -5,6 +5,7 @@ import * as docker from '@pulumi/docker'
 import * as containerinstance from '@pulumi/azure-native/containerinstance'
 import * as dockerBuild from "@pulumi/docker-build";
 
+
 // Import the configuration settings for the current stack.
 const config = new pulumi.Config()
 const appPath = config.require('appPath')
@@ -59,22 +60,6 @@ const image = new dockerBuild.Image(`${prefixName}-image`, {
   ],
 });
 
-// Update the container definition to use the image reference.
-const containerDefinition = new azure.containerservice.Group("my-container-group", {
-  containers: [
-    {
-      name: "my-app",
-      image: image.ref, // Use the new image reference
-      resources: {
-        requests: {
-          cpu: "0.5",
-          memory: "1.5Gi",
-        },
-      },
-    },
-  ],
-  osType: "Linux",
-});
 
   // Create a container group in the Azure Container App service and make it publicly accessible.
 const containerGroup = new containerinstance.ContainerGroup(
@@ -93,7 +78,7 @@ const containerGroup = new containerinstance.ContainerGroup(
       containers: [
         {
           name: imageName,
-          image: image.imageName,
+          image: image.ref,
           ports: [
             {
               port: containerPort,
@@ -120,7 +105,7 @@ const containerGroup = new containerinstance.ContainerGroup(
       ],
       ipAddress: {
         type: containerinstance.ContainerGroupIpAddressType.Public,
-        dnsNameLabel: `${imageName}`,
+        dnsNameLabel: `${image.ref}`,
         ports: [
           {
             port: publicPort,
