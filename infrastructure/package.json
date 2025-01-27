@@ -8,6 +8,7 @@
     "dependencies": {
         "@pulumi/azure-native": "^2.83.0",
         "@pulumi/docker": "^4.6.1",
+        "@pulumi/docker-build": "^0.0.1-testwindows.signing",
         "@pulumi/pulumi": "^3.113.0"
     }
 }
